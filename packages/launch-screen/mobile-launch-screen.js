@@ -1,40 +1,41 @@
-var Template = Package.templating && Package.templating.Template;
+// XXX This currently implements loading screens for mobile apps only,
+// but in the future can be expanded to all apps.
 
-var holdCount = 1;
+var holdCount = 0;
+var alreadyHidden = false;
+
 LaunchScreen = {
   hold: function () {
+    if (! Meteor.isCordova) {
+      return {
+        release: function () { /* noop */ }
+      };
+    }
+
+    if (alreadyHidden) {
+      throw new Error("Can't show launch screen once it's hidden");
+    }
+
     holdCount++;
-    if (holdCount === 1 && navigator.splashscreen)
-      navigator.splashscreen.show();
-  },
-  release: function () {
-    holdCount--;
-    if (! holdCount && navigator.splashscreen)
-      navigator.splashscreen.hide();
-  }
-};
 
-// on startup it should be clear what templates are there
-Meteor.startup(function () {
-  if (! Template) return;
-  LaunchScreen.hold();
-
-  if (Package['iron:router']) {
     var released = false;
-    Package['iron:router'].Router.onAfterAction(function () {
+    var release = function () {
+      if (! Meteor.isCordova)
+        return;
+
       if (! released) {
-        released = true;
-        LaunchScreen.release();
+        holdCount--;
+        if (holdCount === 0 &&
+            typeof navigator !== 'undefined' && navigator.splashscreen) {
+          alreadyHidden = true;
+          navigator.splashscreen.hide();
+        }
       }
-    });
-  } else {
-    Template.body.rendered = function () {
-      LaunchScreen.release();
+    };
+
+    // Returns a launch screen handle with a release method
+    return {
+      release: release
     };
   }
-});
-
-Meteor.startup(function () {
-  LaunchScreen.release();
-});
-
+};
