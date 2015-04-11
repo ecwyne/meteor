@@ -98,7 +98,7 @@ Posts.insert({title: "Hello world", body: "First post"});
 // Changes are visible immediately -- no waiting for a round trip to
 // the server.
 assert(Posts.find().count() === 1);
-
+d
 // Create a temporary, local collection. It works just like any other
 // collection, but it doesn't send changes to the server, and it
 // can't receive any data from subscriptions.
@@ -463,7 +463,7 @@ Posts.allow({
 });
 
 Posts.deny({
-  update: function (userId, docs, fields, modifier) {
+  update: function (userId, doc, fields, modifier) {
     // can't change owners
     return _.contains(fields, 'owner');
   },
